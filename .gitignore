@@ -1,0 +1,17 @@
+# Build outputs
+*.prg
+*.prg.debug.xml
+gen/
+mir/
+internal-mir/
+external-mir/
+
+# IDE
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS
+.DS_Store
+Thumbs.db

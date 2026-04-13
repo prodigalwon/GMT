@@ -1,0 +1,339 @@
+{
+  "settings" : [ {
+    "key" : "gmt1Label",
+    "valueType" : "string",
+    "defaultValue" : "HST",
+    "configTitle" : "GMT1LabelTitle",
+    "configPrompt" : null,
+    "configType" : "alphaNumeric",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "gmt1Offset",
+    "valueType" : "number",
+    "defaultValue" : -600,
+    "configTitle" : "GMT1OffsetTitle",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "$literal0$",
+      "value" : -720
+    }, {
+      "display" : "$literal1$",
+      "value" : -660
+    }, {
+      "display" : "$literal2$",
+      "value" : -600
+    }, {
+      "display" : "$literal3$",
+      "value" : -570
+    }, {
+      "display" : "$literal4$",
+      "value" : -540
+    }, {
+      "display" : "$literal5$",
+      "value" : -480
+    }, {
+      "display" : "$literal6$",
+      "value" : -420
+    }, {
+      "display" : "$literal7$",
+      "value" : -360
+    }, {
+      "display" : "$literal8$",
+      "value" : -300
+    }, {
+      "display" : "$literal9$",
+      "value" : -240
+    }, {
+      "display" : "$literal10$",
+      "value" : -210
+    }, {
+      "display" : "$literal11$",
+      "value" : -180
+    }, {
+      "display" : "$literal12$",
+      "value" : -120
+    }, {
+      "display" : "$literal13$",
+      "value" : -60
+    }, {
+      "display" : "$literal14$",
+      "value" : 0
+    }, {
+      "display" : "$literal15$",
+      "value" : 60
+    }, {
+      "display" : "$literal16$",
+      "value" : 120
+    }, {
+      "display" : "$literal17$",
+      "value" : 180
+    }, {
+      "display" : "$literal18$",
+      "value" : 210
+    }, {
+      "display" : "$literal19$",
+      "value" : 240
+    }, {
+      "display" : "$literal20$",
+      "value" : 270
+    }, {
+      "display" : "$literal21$",
+      "value" : 300
+    }, {
+      "display" : "$literal22$",
+      "value" : 330
+    }, {
+      "display" : "$literal23$",
+      "value" : 345
+    }, {
+      "display" : "$literal24$",
+      "value" : 360
+    }, {
+      "display" : "$literal25$",
+      "value" : 390
+    }, {
+      "display" : "$literal26$",
+      "value" : 420
+    }, {
+      "display" : "$literal27$",
+      "value" : 480
+    }, {
+      "display" : "$literal28$",
+      "value" : 525
+    }, {
+      "display" : "$literal29$",
+      "value" : 540
+    }, {
+      "display" : "$literal30$",
+      "value" : 570
+    }, {
+      "display" : "$literal31$",
+      "value" : 600
+    }, {
+      "display" : "$literal32$",
+      "value" : 630
+    }, {
+      "display" : "$literal33$",
+      "value" : 660
+    }, {
+      "display" : "$literal34$",
+      "value" : 720
+    }, {
+      "display" : "$literal35$",
+      "value" : 765
+    }, {
+      "display" : "$literal36$",
+      "value" : 780
+    }, {
+      "display" : "$literal37$",
+      "value" : 840
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "gmt2Label",
+    "valueType" : "string",
+    "defaultValue" : "EST",
+    "configTitle" : "GMT2LabelTitle",
+    "configPrompt" : null,
+    "configType" : "alphaNumeric",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : null,
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  }, {
+    "key" : "gmt2Offset",
+    "valueType" : "number",
+    "defaultValue" : -300,
+    "configTitle" : "GMT2OffsetTitle",
+    "configPrompt" : null,
+    "configType" : "list",
+    "configError" : null,
+    "configHelpUrl" : null,
+    "configReadonly" : false,
+    "configRequired" : false,
+    "configOptions" : [ {
+      "display" : "$literal0$",
+      "value" : -720
+    }, {
+      "display" : "$literal1$",
+      "value" : -660
+    }, {
+      "display" : "$literal2$",
+      "value" : -600
+    }, {
+      "display" : "$literal3$",
+      "value" : -570
+    }, {
+      "display" : "$literal4$",
+      "value" : -540
+    }, {
+      "display" : "$literal5$",
+      "value" : -480
+    }, {
+      "display" : "$literal6$",
+      "value" : -420
+    }, {
+      "display" : "$literal7$",
+      "value" : -360
+    }, {
+      "display" : "$literal8$",
+      "value" : -300
+    }, {
+      "display" : "$literal9$",
+      "value" : -240
+    }, {
+      "display" : "$literal10$",
+      "value" : -210
+    }, {
+      "display" : "$literal11$",
+      "value" : -180
+    }, {
+      "display" : "$literal12$",
+      "value" : -120
+    }, {
+      "display" : "$literal13$",
+      "value" : -60
+    }, {
+      "display" : "$literal14$",
+      "value" : 0
+    }, {
+      "display" : "$literal15$",
+      "value" : 60
+    }, {
+      "display" : "$literal16$",
+      "value" : 120
+    }, {
+      "display" : "$literal17$",
+      "value" : 180
+    }, {
+      "display" : "$literal18$",
+      "value" : 210
+    }, {
+      "display" : "$literal19$",
+      "value" : 240
+    }, {
+      "display" : "$literal20$",
+      "value" : 270
+    }, {
+      "display" : "$literal21$",
+      "value" : 300
+    }, {
+      "display" : "$literal22$",
+      "value" : 330
+    }, {
+      "display" : "$literal23$",
+      "value" : 345
+    }, {
+      "display" : "$literal24$",
+      "value" : 360
+    }, {
+      "display" : "$literal25$",
+      "value" : 390
+    }, {
+      "display" : "$literal26$",
+      "value" : 420
+    }, {
+      "display" : "$literal27$",
+      "value" : 480
+    }, {
+      "display" : "$literal28$",
+      "value" : 525
+    }, {
+      "display" : "$literal29$",
+      "value" : 540
+    }, {
+      "display" : "$literal30$",
+      "value" : 570
+    }, {
+      "display" : "$literal31$",
+      "value" : 600
+    }, {
+      "display" : "$literal32$",
+      "value" : 630
+    }, {
+      "display" : "$literal33$",
+      "value" : 660
+    }, {
+      "display" : "$literal34$",
+      "value" : 720
+    }, {
+      "display" : "$literal35$",
+      "value" : 765
+    }, {
+      "display" : "$literal36$",
+      "value" : 780
+    }, {
+      "display" : "$literal37$",
+      "value" : 840
+    } ],
+    "configMin" : null,
+    "configMax" : null,
+    "configMaxLength" : null
+  } ],
+  "supportsLiveValidation" : false,
+  "languages" : {
+    "valyrian" : {
+      "AppName" : "GMT",
+      "$literal26$" : "UTC+7:00 Bangkok (ICT)",
+      "$literal0$" : "UTC-12:00 Baker Island",
+      "$literal16$" : "UTC+2:00 Cairo (EET)",
+      "$literal24$" : "UTC+6:00 Dhaka (BST)",
+      "$literal2$" : "UTC-10:00 Hawaii (HST)",
+      "$literal14$" : "UTC+0:00 London (GMT)",
+      "$literal36$" : "UTC+13:00 Tongatapu (TOT)",
+      "$literal4$" : "UTC-9:00 Alaska (AKST)",
+      "$literal28$" : "UTC+8:45 Eucla (ACWST)",
+      "$literal6$" : "UTC-7:00 Mountain (MST)",
+      "$literal18$" : "UTC+3:30 Tehran (IRST)",
+      "$literal8$" : "UTC-5:00 Eastern (EST)",
+      "$literal30$" : "UTC+9:30 Adelaide (ACST)",
+      "$literal22$" : "UTC+5:30 Mumbai (IST)",
+      "$literal12$" : "UTC-2:00 South Georgia",
+      "$literal34$" : "UTC+12:00 Auckland (NZST)",
+      "$literal20$" : "UTC+4:30 Kabul (AFT)",
+      "$literal10$" : "UTC-3:30 Newfoundland (NST)",
+      "$literal32$" : "UTC+10:30 Lord Howe (LHST)",
+      "GMT2LabelTitle" : "GMT 2 Label",
+      "GMT1OffsetTitle" : "GMT 1 UTC Offset (hours)",
+      "$literal1$" : "UTC-11:00 American Samoa",
+      "$literal15$" : "UTC+1:00 Paris (CET)",
+      "$literal37$" : "UTC+14:00 Line Islands",
+      "$literal27$" : "UTC+8:00 Singapore (SGT)",
+      "$literal3$" : "UTC-9:30 Marquesas",
+      "$literal13$" : "UTC-1:00 Azores",
+      "$literal35$" : "UTC+12:45 Chatham (CHAST)",
+      "$literal25$" : "UTC+6:30 Yangon (MMT)",
+      "$literal5$" : "UTC-8:00 Pacific (PST)",
+      "$literal19$" : "UTC+4:00 Dubai (GST)",
+      "$literal7$" : "UTC-6:00 Central (CST)",
+      "$literal17$" : "UTC+3:00 Moscow (MSK)",
+      "$literal29$" : "UTC+9:00 Tokyo (JST)",
+      "$literal9$" : "UTC-4:00 Atlantic (AST)",
+      "GMT1LabelTitle" : "GMT 1 Label",
+      "GMT2OffsetTitle" : "GMT 2 UTC Offset (hours)",
+      "$literal11$" : "UTC-3:00 Buenos Aires (ART)",
+      "$literal33$" : "UTC+11:00 Noumea (NCT)",
+      "$literal23$" : "UTC+5:45 Kathmandu (NPT)",
+      "$literal31$" : "UTC+10:00 Sydney (AEST)",
+      "$literal21$" : "UTC+5:00 Karachi (PKT)"
+    }
+  }
+}

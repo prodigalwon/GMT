@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<properties>
+    <!-- UTC offset in minutes. e.g. -600 = UTC-10:00 (Hawaii) -->
+    <property id="gmt1Offset" type="number">-600</property>
+    <property id="gmt1Label" type="string">HST</property>
+    <!-- DST rule: 0=none, 1=US, 2=EU, 3=AU, 4=NZ, 5=Chile -->
+    <property id="gmt1DstRule" type="number">0</property>
+
+    <property id="gmt2Offset" type="number">-300</property>
+    <property id="gmt2Label" type="string">EST</property>
+    <property id="gmt2DstRule" type="number">1</property>
+</properties>

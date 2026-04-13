@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<settings>
+    <!-- GMT Slot 1 -->
+    <setting propertyKey="@Properties.gmt1Label" title="@Strings.GMT1LabelTitle">
+        <settingConfig type="alphaNumeric"/>
+    </setting>
+    <setting propertyKey="@Properties.gmt1Offset" title="@Strings.GMT1OffsetTitle">
+        <settingConfig type="list">
+            <listEntry value="-720">UTC-12:00 Baker Island</listEntry>
+            <listEntry value="-660">UTC-11:00 American Samoa</listEntry>
+            <listEntry value="-600">UTC-10:00 Hawaii (HST)</listEntry>
+            <listEntry value="-570">UTC-9:30 Marquesas</listEntry>
+            <listEntry value="-540">UTC-9:00 Alaska (AKST)</listEntry>
+            <listEntry value="-480">UTC-8:00 Pacific (PST)</listEntry>
+            <listEntry value="-420">UTC-7:00 Mountain (MST)</listEntry>
+            <listEntry value="-360">UTC-6:00 Central (CST)</listEntry>
+            <listEntry value="-300">UTC-5:00 Eastern (EST)</listEntry>
+            <listEntry value="-240">UTC-4:00 Atlantic (AST)</listEntry>
+            <listEntry value="-210">UTC-3:30 Newfoundland (NST)</listEntry>
+            <listEntry value="-180">UTC-3:00 Buenos Aires (ART)</listEntry>
+            <listEntry value="-120">UTC-2:00 South Georgia</listEntry>
+            <listEntry value="-60">UTC-1:00 Azores</listEntry>
+            <listEntry value="0">UTC+0:00 London (GMT)</listEntry>
+            <listEntry value="60">UTC+1:00 Paris (CET)</listEntry>
+            <listEntry value="120">UTC+2:00 Cairo (EET)</listEntry>
+            <listEntry value="180">UTC+3:00 Moscow (MSK)</listEntry>
+            <listEntry value="210">UTC+3:30 Tehran (IRST)</listEntry>
+            <listEntry value="240">UTC+4:00 Dubai (GST)</listEntry>
+            <listEntry value="270">UTC+4:30 Kabul (AFT)</listEntry>
+            <listEntry value="300">UTC+5:00 Karachi (PKT)</listEntry>
+            <listEntry value="330">UTC+5:30 Mumbai (IST)</listEntry>
+            <listEntry value="345">UTC+5:45 Kathmandu (NPT)</listEntry>
+            <listEntry value="360">UTC+6:00 Dhaka (BST)</listEntry>
+            <listEntry value="390">UTC+6:30 Yangon (MMT)</listEntry>
+            <listEntry value="420">UTC+7:00 Bangkok (ICT)</listEntry>
+            <listEntry value="480">UTC+8:00 Singapore (SGT)</listEntry>
+            <listEntry value="525">UTC+8:45 Eucla (ACWST)</listEntry>
+            <listEntry value="540">UTC+9:00 Tokyo (JST)</listEntry>
+            <listEntry value="570">UTC+9:30 Adelaide (ACST)</listEntry>
+            <listEntry value="600">UTC+10:00 Sydney (AEST)</listEntry>
+            <listEntry value="630">UTC+10:30 Lord Howe (LHST)</listEntry>
+            <listEntry value="660">UTC+11:00 Noumea (NCT)</listEntry>
+            <listEntry value="720">UTC+12:00 Auckland (NZST)</listEntry>
+            <listEntry value="765">UTC+12:45 Chatham (CHAST)</listEntry>
+            <listEntry value="780">UTC+13:00 Tongatapu (TOT)</listEntry>
+            <listEntry value="840">UTC+14:00 Line Islands</listEntry>
+        </settingConfig>
+    </setting>
+
+    <!-- GMT Slot 2 -->
+    <setting propertyKey="@Properties.gmt2Label" title="@Strings.GMT2LabelTitle">
+        <settingConfig type="alphaNumeric"/>
+    </setting>
+    <setting propertyKey="@Properties.gmt2Offset" title="@Strings.GMT2OffsetTitle">
+        <settingConfig type="list">
+            <listEntry value="-720">UTC-12:00 Baker Island</listEntry>
+            <listEntry value="-660">UTC-11:00 American Samoa</listEntry>
+            <listEntry value="-600">UTC-10:00 Hawaii (HST)</listEntry>
+            <listEntry value="-570">UTC-9:30 Marquesas</listEntry>
+            <listEntry value="-540">UTC-9:00 Alaska (AKST)</listEntry>
+            <listEntry value="-480">UTC-8:00 Pacific (PST)</listEntry>
+            <listEntry value="-420">UTC-7:00 Mountain (MST)</listEntry>
+            <listEntry value="-360">UTC-6:00 Central (CST)</listEntry>
+            <listEntry value="-300">UTC-5:00 Eastern (EST)</listEntry>
+            <listEntry value="-240">UTC-4:00 Atlantic (AST)</listEntry>
+            <listEntry value="-210">UTC-3:30 Newfoundland (NST)</listEntry>
+            <listEntry value="-180">UTC-3:00 Buenos Aires (ART)</listEntry>
+            <listEntry value="-120">UTC-2:00 South Georgia</listEntry>
+            <listEntry value="-60">UTC-1:00 Azores</listEntry>
+            <listEntry value="0">UTC+0:00 London (GMT)</listEntry>
+            <listEntry value="60">UTC+1:00 Paris (CET)</listEntry>
+            <listEntry value="120">UTC+2:00 Cairo (EET)</listEntry>
+            <listEntry value="180">UTC+3:00 Moscow (MSK)</listEntry>
+            <listEntry value="210">UTC+3:30 Tehran (IRST)</listEntry>
+            <listEntry value="240">UTC+4:00 Dubai (GST)</listEntry>
+            <listEntry value="270">UTC+4:30 Kabul (AFT)</listEntry>
+            <listEntry value="300">UTC+5:00 Karachi (PKT)</listEntry>
+            <listEntry value="330">UTC+5:30 Mumbai (IST)</listEntry>
+            <listEntry value="345">UTC+5:45 Kathmandu (NPT)</listEntry>
+            <listEntry value="360">UTC+6:00 Dhaka (BST)</listEntry>
+            <listEntry value="390">UTC+6:30 Yangon (MMT)</listEntry>
+            <listEntry value="420">UTC+7:00 Bangkok (ICT)</listEntry>
+            <listEntry value="480">UTC+8:00 Singapore (SGT)</listEntry>
+            <listEntry value="525">UTC+8:45 Eucla (ACWST)</listEntry>
+            <listEntry value="540">UTC+9:00 Tokyo (JST)</listEntry>
+            <listEntry value="570">UTC+9:30 Adelaide (ACST)</listEntry>
+            <listEntry value="600">UTC+10:00 Sydney (AEST)</listEntry>
+            <listEntry value="630">UTC+10:30 Lord Howe (LHST)</listEntry>
+            <listEntry value="660">UTC+11:00 Noumea (NCT)</listEntry>
+            <listEntry value="720">UTC+12:00 Auckland (NZST)</listEntry>
+            <listEntry value="765">UTC+12:45 Chatham (CHAST)</listEntry>
+            <listEntry value="780">UTC+13:00 Tongatapu (TOT)</listEntry>
+            <listEntry value="840">UTC+14:00 Line Islands</listEntry>
+        </settingConfig>
+    </setting>
+</settings>

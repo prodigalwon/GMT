@@ -1,0 +1,1057 @@
+<!--
+================================================================================
+GARMIN FENIX 7X — GMT WATCH FACE MOCKUP (current state)
+================================================================================
+
+This file simulates the actual watch face implementation. All colors are
+palette-exact MIP RGB222 (the Fenix 7X only renders 64 colors). Layout
+percentages mirror the Monkey C source. Use this to preview the watch face
+under different locations, times, and edge cases (green flash, blood moon).
+
+CONTROLS
+  - Location preset: changes lat/long, sunrise/sunset times, weather
+  - Time of day slider: scrubs through the day, moves the sun dot, updates
+    the center time, and triggers the sunrise→sunset display swap (with the
+    20-min grace period)
+  - Trigger Green Flash: shows the 1-second flash at sunset
+  - Blood Moon toggle: turns the moon icon red (eclipse rendering)
+
+The moon tilt adjusts based on latitude. Northern hemisphere → left horn
+rises higher. Southern → right horn rises higher. At the equator the
+crescent is symmetric (horns at equal heights).
+================================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fenix 7X — GMT Watch Face Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0f;
+    color: #888;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 24px 16px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #4a5a6a;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .watch-wrap {
+    position: relative;
+    padding: 14px;
+    background: radial-gradient(circle at 30% 30%, #2a2a2a, #111 70%, #000);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 6px #1a1a1a,
+      0 0 0 8px #2a2a2a,
+      0 24px 60px rgba(0,0,0,0.85);
+  }
+  canvas { background: #000; border-radius: 50%; display: block; }
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    max-width: 460px;
+  }
+  .ctrl-label {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #3a4a5a;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .gmt-row {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+  .gmt-row label {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #ffaa00;
+    text-transform: uppercase;
+    text-align: right;
+  }
+  select {
+    background: #0a1520;
+    color: #aabbcc;
+    border: 1px solid #1a2a3a;
+    padding: 6px 8px;
+    border-radius: 3px;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    cursor: pointer;
+    width: 100%;
+  }
+  select:focus { outline: none; border-color: #00aaff; }
+  button {
+    background: #0a1520;
+    color: #6a7a8a;
+    border: 1px solid #1a2a3a;
+    padding: 8px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  button:hover {
+    background: #15253a;
+    color: #aabbcc;
+    border-color: #2a4a5a;
+  }
+  button.active {
+    background: #003355;
+    color: #00aaff;
+    border-color: #00aaff;
+  }
+  button.green       { color: #4ade80; border-color: #1a4a2a; }
+  button.green:hover { border-color: #4ade80; background: #0a2515; }
+  button.red         { color: #ff5555; border-color: #4a1a1a; }
+  button.red:hover   { border-color: #ff5555; background: #2a0a0a; }
+  button.red.active  { background: #551111; border-color: #ff5555; color: #ff5555; }
+  .slider-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+  }
+  input[type=range] {
+    width: 100%;
+    accent-color: #00aaff;
+    cursor: pointer;
+  }
+  .readout {
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    color: #00aaff;
+    letter-spacing: 1px;
+  }
+  .status {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    color: #4a5a6a;
+    text-align: center;
+    line-height: 1.7;
+    padding: 10px;
+    border: 1px solid #1a2a3a;
+    border-radius: 3px;
+  }
+  .status .hi { color: #aabbcc; }
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px 22px;
+    max-width: 460px;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid #1a2a3a;
+    border-radius: 3px;
+  }
+  .legend h3 {
+    grid-column: 1 / -1;
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #3a4a5a;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    color: #5a6a7a;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid #2a3a4a;
+  }
+  .swatch {
+    width: 24px;
+    height: 6px;
+    flex-shrink: 0;
+    border: 1px solid #2a3a4a;
+  }
+  .footer {
+    font-family: "Courier New", monospace;
+    font-size: 9px;
+    color: #2a3a4a;
+    text-align: center;
+    max-width: 460px;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<h1>Fenix 7X — GMT Watch Face Mockup</h1>
+
+<div class="watch-wrap">
+  <canvas id="face" width="360" height="360"></canvas>
+</div>
+
+<div class="controls">
+  <div>
+    <div class="ctrl-label">Location Preset</div>
+    <div class="row" id="locations">
+      <button data-loc="hawaii">Hawaii · Oct</button>
+      <button data-loc="ny">New York · Jun</button>
+      <button data-loc="oslo">Oslo · Apr</button>
+      <button data-loc="auckland">Auckland · Dec</button>
+      <button data-loc="quito">Quito · Mar (eq)</button>
+      <button data-loc="reykjavik">Reykjavik · Jun</button>
+    </div>
+  </div>
+
+  <div class="slider-wrap">
+    <div class="ctrl-label">Time of Day</div>
+    <input type="range" id="time-slider" min="0" max="1439" value="540">
+    <div class="readout" id="time-readout">9:00 AM</div>
+  </div>
+
+  <div>
+    <div class="ctrl-label">GMT Slots</div>
+    <div class="gmt-row">
+      <label>GMT 1</label>
+      <select id="gmt1-select"></select>
+    </div>
+    <div class="gmt-row" style="margin-top:6px;">
+      <label>GMT 2</label>
+      <select id="gmt2-select"></select>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="green" id="green-flash">⚡ Trigger Green Flash</button>
+    <button class="red" id="blood-moon">🩸 Blood Moon</button>
+  </div>
+
+  <div class="status" id="status">—</div>
+</div>
+
+<div class="legend">
+  <h3>Legend</h3>
+  <div class="legend-item"><div class="dot" style="background:#fff"></div>Hours · white</div>
+  <div class="legend-item"><div class="dot" style="background:#00aaff"></div>Minutes · cyan</div>
+  <div class="legend-item"><div class="dot" style="background:#aaaaaa"></div>Date "Apr 7" · grey</div>
+  <div class="legend-item"><div class="dot" style="background:#00aaff"></div>Day of week · cyan</div>
+  <div class="legend-item"><div class="dot" style="background:#ffaa00"></div>GMT time · amber</div>
+  <div class="legend-item"><div class="dot" style="background:#ffaa55"></div>GMT day · peach</div>
+  <div class="legend-item"><div class="dot" style="background:#00ff55"></div>GMT offset · green</div>
+  <div class="legend-item"><div class="dot" style="background:#ff5555"></div>Heart rate · red</div>
+  <div class="legend-item"><div class="dot" style="background:#ff5500"></div>Sunset/sunrise · orange</div>
+  <div class="legend-item"><div class="dot" style="background:#ffffaa"></div>Moon · pale yellow</div>
+  <div class="legend-item"><div class="dot" style="background:#ff5555"></div>Eclipse moon · red</div>
+  <div class="legend-item"><div class="dot" style="background:#00ff55"></div>Battery (good) · green</div>
+  <div class="legend-item"><div class="swatch" style="background:linear-gradient(to right,#ffaa00,#aa55ff,#5500ff)"></div>Daylight arc</div>
+  <div class="legend-item"><div class="dot" style="background:#00ff55"></div>Green flash · sunset moment</div>
+</div>
+
+<div class="footer">
+  Colors are palette-exact MIP RGB222 (64 colors). Layout percentages mirror
+  the Monkey C source. Moon math handles latitude tilt with the corrected
+  rotation matrix.
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+//  COLOR PALETTE — palette-exact RGB222 values (matches GMTView.mc)
+// ════════════════════════════════════════════════════════════════════════════
+const C = {
+  bg:        '#000000',
+  hours:     '#FFFFFF',
+  minutes:   '#00AAFF',
+  date:      '#AAAAAA',
+  dow:       '#00AAFF',
+  gmtTime:   '#FFAA00',
+  gmtDay:    '#FFAA55',
+  gmtOff:    '#00FF55',
+  hr:        '#FF5555',
+  sunset:    '#FF5500',
+  moon:      '#FFFFAA',
+  moonEcl:   '#FF5555',
+  battOk:    '#00FF55',
+  battMid:   '#FFAA00',
+  battLow:   '#FF5555',
+  battOutl:  '#555555',
+  tickMaj:   '#AAAAAA',
+  tickMin:   '#555555',
+  stepFill:  '#00AAFF',
+  stepEmpty: '#000055',
+  arcGold:   '#FFAA00',
+  arcLilac:  '#AA55FF',
+  arcViolet: '#5500FF',
+  arcGreen:  '#00FF55',
+  weather:   '#AAAAAA',
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+//  LOCATION PRESETS — sunrise/sunset are minutes since local midnight
+// ════════════════════════════════════════════════════════════════════════════
+const LOCATIONS = {
+  hawaii: {
+    name: 'Honolulu',  date: 'Oct 15',  dow: 'Wed',
+    lat: 21.30, tzOffset: -600,
+    sunriseMin: 6*60+24,   sunsetMin: 17*60+57,  weather: 'clear'
+  },
+  ny: {
+    name: 'New York',  date: 'Jun 21',  dow: 'Sun',
+    lat: 40.71, tzOffset: -240,
+    sunriseMin: 5*60+25,   sunsetMin: 20*60+31,  weather: 'partly'
+  },
+  oslo: {
+    name: 'Oslo',      date: 'Apr 15',  dow: 'Wed',
+    lat: 59.91, tzOffset: 120,
+    sunriseMin: 5*60+50,   sunsetMin: 20*60+40,  weather: 'cloudy'
+  },
+  auckland: {
+    name: 'Auckland',  date: 'Dec 15',  dow: 'Tue',
+    lat: -36.85, tzOffset: 780,
+    sunriseMin: 5*60+58,   sunsetMin: 20*60+38,  weather: 'partly'
+  },
+  quito: {
+    name: 'Quito',     date: 'Mar 20',  dow: 'Fri',
+    lat: -0.18, tzOffset: -300,
+    sunriseMin: 6*60+15,   sunsetMin: 18*60+22,  weather: 'rain'
+  },
+  reykjavik: {
+    name: 'Reykjavik', date: 'Jun 21',  dow: 'Sun',
+    lat: 64.13, tzOffset: 0,
+    sunriseMin: 2*60+55,   sunsetMin: 24*60+4,   weather: 'cloudy'
+  },
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TIMEZONE PRESETS — matches GMTSettings.mc TZ_PRESETS
+// ════════════════════════════════════════════════════════════════════════════
+const TZ_PRESETS = [
+  ['BAK',  -720, 'Baker Island'],
+  ['SST',  -660, 'American Samoa'],
+  ['HST',  -600, 'Hawaii'],
+  ['MIT',  -570, 'Marquesas'],
+  ['AKST', -540, 'Alaska'],
+  ['PST',  -480, 'Pacific'],
+  ['MST',  -420, 'Mountain'],
+  ['CST',  -360, 'Central'],
+  ['EST',  -300, 'Eastern'],
+  ['AST',  -240, 'Atlantic'],
+  ['NST',  -210, 'Newfoundland'],
+  ['ART',  -180, 'Buenos Aires'],
+  ['GST',  -120, 'South Georgia'],
+  ['AZO',   -60, 'Azores'],
+  ['GMT',     0, 'London'],
+  ['CET',    60, 'Paris'],
+  ['EET',   120, 'Cairo'],
+  ['MSK',   180, 'Moscow'],
+  ['IRT',   210, 'Tehran'],
+  ['DXB',   240, 'Dubai'],
+  ['AFT',   270, 'Kabul'],
+  ['PKT',   300, 'Karachi'],
+  ['IST',   330, 'Mumbai'],
+  ['NPT',   345, 'Kathmandu'],
+  ['BST',   360, 'Dhaka'],
+  ['MMT',   390, 'Yangon'],
+  ['ICT',   420, 'Bangkok'],
+  ['SGT',   480, 'Singapore'],
+  ['JST',   540, 'Tokyo'],
+  ['ACST',  570, 'Adelaide'],
+  ['AEST',  600, 'Sydney'],
+  ['NCT',   660, 'Noumea'],
+  ['NZST',  720, 'Auckland'],
+  ['TOT',   780, 'Tongatapu'],
+  ['LIT',   840, 'Line Islands'],
+];
+
+// ════════════════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════════════════
+const state = {
+  loc: 'hawaii',
+  nowMin: 540,            // 9:00 AM
+  greenFlash: false,
+  greenFlashStart: 0,
+  bloodMoon: false,
+  gmt1Idx: 2,             // HST default (index in TZ_PRESETS)
+  gmt2Idx: 8,             // EST default
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+//  CANVAS SETUP
+// ════════════════════════════════════════════════════════════════════════════
+const cvs = document.getElementById('face');
+const ctx = cvs.getContext('2d');
+const W = cvs.width, H = cvs.height;
+const cx = W / 2, cy = H / 2;
+
+// ════════════════════════════════════════════════════════════════════════════
+//  FONT SIZES — calibrated to match the actual sim screenshot, NOT Monkey C.
+//  At W=360 these produce the visual sizes you see on the watch face.
+// ════════════════════════════════════════════════════════════════════════════
+const FS = {
+  time:    W * 0.22,    // big center hours/minutes
+  date:    W * 0.058,   // "Apr 7"
+  dow:     W * 0.05,    // "Tue" under the date
+  gmtTime: W * 0.046,   // "8:26 PM"
+  gmtDay:  W * 0.046,   // "Tue" under the GMT time
+  gmtOff:  W * 0.04,    // "HST +0"
+  hr:      W * 0.06,    // "80"
+  sunset:  W * 0.05,    // "5:58"
+  batt:    W * 0.046,   // "50%"
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAWING HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function lerpHex(a, b, t) {
+  t = Math.max(0, Math.min(1, t));
+  const ar = parseInt(a.slice(1,3), 16), ag = parseInt(a.slice(3,5), 16), ab = parseInt(a.slice(5,7), 16);
+  const br = parseInt(b.slice(1,3), 16), bg = parseInt(b.slice(3,5), 16), bb = parseInt(b.slice(5,7), 16);
+  const r  = Math.round(ar + (br - ar) * t);
+  const g  = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return '#' + [r, g, bl].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+function arcColor(minsLeft) {
+  if (state.greenFlash) return C.arcGreen;
+  if (minsLeft <= 0)    return C.arcGreen;
+  if (minsLeft > 90)    return C.arcGold;
+  if (minsLeft > 30) {
+    const t = 1 - (minsLeft - 30) / 60;
+    return lerpHex(C.arcGold, C.arcLilac, t);
+  }
+  const t = 1 - minsLeft / 30;
+  return lerpHex(C.arcLilac, C.arcViolet, t);
+}
+
+// minutes-since-midnight → canvas angle in radians.
+// 12 o'clock = -90°, 3 o'clock = 0°, 6 o'clock = 90°, 9 o'clock = 180°
+// Canvas angles increase clockwise. Garmin uses 12hr wrap so 13:00 == 01:00 visually.
+function minToCanvasRad(min) {
+  const m12 = ((min % 720) + 720) % 720;
+  const deg = m12 * 0.5 - 90;
+  return deg * Math.PI / 180;
+}
+
+function fmt12(min) {
+  const m = ((min % 1440) + 1440) % 1440;
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const sfx = h >= 12 ? 'PM' : 'AM';
+  return `${h12}:${mm.toString().padStart(2,'0')} ${sfx}`;
+}
+
+function fmt12Short(min) {
+  const m = ((min % 1440) + 1440) % 1440;
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${mm.toString().padStart(2,'0')}`;
+}
+
+// J2000 moon phase
+function moonPhase() {
+  const ref = Date.UTC(2000, 0, 6, 18, 14);
+  const days = (Date.now() - ref) / 86400000;
+  let p = days / 29.53059;
+  return p - Math.floor(p);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: BACKGROUND ELEMENTS
+// ════════════════════════════════════════════════════════════════════════════
+function drawTickMarks() {
+  const outerR = W / 2 - 2;
+  for (let i = 0; i < 60; i++) {
+    const angle = (i / 60) * Math.PI * 2 - Math.PI / 2;
+    const cosA = Math.cos(angle), sinA = Math.sin(angle);
+    const major = i % 5 === 0;
+    const len = major ? W * 0.03 : W * 0.015;
+    const innerR = outerR - len;
+    ctx.strokeStyle = major ? C.tickMaj : C.tickMin;
+    ctx.lineWidth   = major ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(cx + cosA * innerR, cy + sinA * innerR);
+    ctx.lineTo(cx + cosA * outerR, cy + sinA * outerR);
+    ctx.stroke();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: DAYLIGHT ARC
+// ════════════════════════════════════════════════════════════════════════════
+function drawDaylightArc() {
+  const loc = LOCATIONS[state.loc];
+  const nowMin = state.nowMin;
+
+  // Daytime check
+  if (!state.greenFlash && (nowMin < loc.sunriseMin || nowMin > loc.sunsetMin)) return;
+
+  const minsLeft = loc.sunsetMin - nowMin;
+  const color = arcColor(minsLeft);
+  const arcR = W * 0.48;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'butt';
+
+  const startRad = minToCanvasRad(nowMin);
+  // For end, use direct (non-wrapped) angle so cross-noon arcs render correctly
+  const endDeg = loc.sunsetMin * 0.5 - 90;
+  const endRad = endDeg * Math.PI / 180;
+  // Compute startDeg the same way for arc geometry
+  const startDeg = nowMin * 0.5 - 90;
+  const startRadGeom = startDeg * Math.PI / 180;
+
+  if (startDeg !== endDeg) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, arcR, startRadGeom, endRad, false);
+    ctx.stroke();
+  }
+
+  // Sun dot at current position
+  const sunX = cx + arcR * Math.cos(startRad);
+  const sunY = cy + arcR * Math.sin(startRad);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, W * 0.017, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sunset marker (last 2hrs)
+  if (minsLeft < 120 && minsLeft > 0) {
+    const ssRad = minToCanvasRad(loc.sunsetMin);
+    ctx.fillStyle = C.sunset;
+    ctx.beginPath();
+    ctx.arc(cx + arcR * Math.cos(ssRad), cy + arcR * Math.sin(ssRad), W * 0.013, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: STEPS BAR
+// ════════════════════════════════════════════════════════════════════════════
+function drawStepsBar() {
+  const filled = Math.min(10, Math.floor(state.nowMin / 144));
+
+  const bx = W * 0.62;
+  const bw = Math.max(5, W * 0.025);
+  const bh = Math.max(7, H * 0.028);
+  const sp = bh * 1.3;
+  const totalH = sp * 10;
+  const by = cy + FS.time * 0.45 - bh;
+
+  for (let i = 0; i < 10; i++) {
+    const y = by - i * sp;
+    ctx.fillStyle = i < filled ? C.stepFill : C.stepEmpty;
+    ctx.fillRect(bx, y, bw, bh);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: CENTER TIME
+// ════════════════════════════════════════════════════════════════════════════
+function drawCenterTime() {
+  const h = Math.floor(state.nowMin / 60);
+  const m = state.nowMin % 60;
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const hourStr = h12.toString().padStart(2, '0');
+  const minStr  = m.toString().padStart(2, '0');
+
+  ctx.font = `900 ${FS.time}px "Arial Black", "Helvetica", sans-serif`;
+  ctx.textAlign = 'center';
+
+  // Hours (white) — bottom edge near cy
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = C.hours;
+  ctx.fillText(hourStr, cx, cy - 4);
+
+  // Minutes (blue) — top edge near cy
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = C.minutes;
+  ctx.fillText(minStr, cx, cy - 4);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: DATE & DAY OF WEEK
+// ════════════════════════════════════════════════════════════════════════════
+function drawDate() {
+  const loc = LOCATIONS[state.loc];
+  const y = H * 0.07;
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  ctx.font = `900 ${FS.date}px "Arial Black", sans-serif`;
+  ctx.fillStyle = C.date;
+  ctx.fillText(loc.date, cx, y);
+
+  ctx.font = `900 ${FS.dow}px "Arial Black", sans-serif`;
+  ctx.fillStyle = C.dow;
+  ctx.fillText(loc.dow, cx, y + FS.date + 2);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: WEATHER ICONS (clear / partly / cloudy / rain)
+// ════════════════════════════════════════════════════════════════════════════
+function drawWeather() {
+  const loc = LOCATIONS[state.loc];
+  const sz = W * 0.07;
+  drawWeatherIcon(loc.weather, cx, H * 0.74, sz);
+}
+
+function drawWeatherIcon(kind, icx, icy, sz) {
+  if (kind === 'clear') {
+    ctx.fillStyle = C.gmtTime;
+    ctx.beginPath();
+    ctx.arc(icx, icy, sz / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = C.gmtTime;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      ctx.beginPath();
+      ctx.moveTo(icx + Math.cos(a) * sz * 0.7,  icy + Math.sin(a) * sz * 0.7);
+      ctx.lineTo(icx + Math.cos(a) * sz * 0.95, icy + Math.sin(a) * sz * 0.95);
+      ctx.stroke();
+    }
+  } else if (kind === 'partly') {
+    ctx.fillStyle = C.gmtTime;
+    ctx.beginPath();
+    ctx.arc(icx - sz / 2, icy - sz / 4, sz / 3, 0, Math.PI * 2);
+    ctx.fill();
+    drawCloud(icx + sz / 5, icy + sz / 5, sz, '#AAAAAA');
+  } else if (kind === 'cloudy') {
+    drawCloud(icx, icy, sz, '#AAAAAA');
+  } else if (kind === 'rain') {
+    drawCloud(icx, icy - sz / 4, sz, '#00AAFF');
+    ctx.strokeStyle = '#00AAFF';
+    ctx.lineWidth = 2;
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath();
+      ctx.moveTo(icx + i * sz / 3,         icy + sz / 3);
+      ctx.lineTo(icx + i * sz / 3 - sz / 6, icy + sz * 0.6);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawCloud(icx, icy, sz, color) {
+  ctx.fillStyle = color;
+  const r = sz / 3;
+  ctx.beginPath();
+  ctx.arc(icx - r, icy, r, 0, Math.PI * 2);
+  ctx.arc(icx + r, icy, r, 0, Math.PI * 2);
+  ctx.arc(icx, icy - r / 2, r * 1.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(icx - r, icy, r * 2, r);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: BATTERY
+// ════════════════════════════════════════════════════════════════════════════
+function drawBattery() {
+  const bat = 50;  // mock
+  let color;
+  if (bat > 30)      color = C.battOk;
+  else if (bat > 15) color = C.battMid;
+  else               color = C.battLow;
+
+  const y = H * 0.83;
+  const iconW = W * 0.075;
+  const iconH = H * 0.038;
+  const capW  = Math.max(2, iconW / 10);
+  const capH  = iconH * 0.6;
+  const iconX = cx - iconW / 2 - capW / 2;
+
+  ctx.strokeStyle = C.battOutl;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(iconX + 0.5, y + 0.5, iconW, iconH);
+  ctx.fillStyle = C.battOutl;
+  ctx.fillRect(iconX + iconW, y + (iconH - capH) / 2, capW, capH);
+
+  const fillW = (iconW - 4) * bat / 100;
+  ctx.fillStyle = color;
+  ctx.fillRect(iconX + 2, y + 2, fillW, iconH - 4);
+
+  // Percent
+  ctx.font = `900 ${FS.batt}px "Arial Black", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = color;
+  ctx.fillText(bat + '%', cx, y + iconH + 3);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: GMT SLOTS
+// ════════════════════════════════════════════════════════════════════════════
+function drawGmtSlot(x, y, utcOffsetMin, label, indent) {
+  const loc = LOCATIONS[state.loc];
+  const localOffsetMin = loc.tzOffset;
+
+  // Compute target local time given the slid sim time as the watch's local
+  const utcMin = state.nowMin - localOffsetMin;
+  const targetTotalMin = utcMin + utcOffsetMin;
+  const targetMin = ((targetTotalMin % 1440) + 1440) % 1440;
+  const dayShift = Math.floor(targetTotalMin / 1440) - Math.floor(state.nowMin / 1440);
+
+  const h = Math.floor(targetMin / 60);
+  const m = targetMin % 60;
+  const sfx = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const timeStr = `${h12}:${m.toString().padStart(2,'0')} ${sfx}`;
+
+  // Day-of-week
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const baseIdx = days.indexOf(loc.dow);
+  const dayStr = days[((baseIdx + dayShift) % 7 + 7) % 7];
+
+  // Relative offset — wrap into [-12h, +12h] range so we don't show -23h
+  let rel = utcOffsetMin - localOffsetMin;
+  while (rel >  720) rel -= 1440;
+  while (rel < -720) rel += 1440;
+
+  const sign = rel >= 0 ? '+' : '-';
+  const absMin = Math.abs(rel);
+  const offStr = (absMin % 60 === 0)
+    ? `${label} ${sign}${Math.floor(absMin / 60)}`
+    : `${label} ${sign}${Math.floor(absMin / 60)}:${(absMin % 60).toString().padStart(2,'0')}`;
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  // Line 1: time
+  ctx.font = `900 ${FS.gmtTime}px "Arial Black", sans-serif`;
+  ctx.fillStyle = C.gmtTime;
+  ctx.fillText(timeStr, x, y);
+
+  // Line 2: day
+  ctx.font = `900 ${FS.gmtDay}px "Arial Black", sans-serif`;
+  ctx.fillStyle = C.gmtDay;
+  ctx.fillText(dayStr, x + indent, y + FS.gmtTime + 1);
+
+  // Line 3: label + offset (slightly smaller, green)
+  ctx.font = `900 ${FS.gmtOff}px "Arial Black", sans-serif`;
+  ctx.fillStyle = C.gmtOff;
+  ctx.fillText(offStr, x + indent, y + FS.gmtTime + FS.gmtDay + 3);
+}
+
+function drawGmt1() {
+  // Upper slot — 10 o'clock
+  const tz = TZ_PRESETS[state.gmt1Idx];
+  drawGmtSlot(W * 0.17, H * 0.20, tz[1], tz[0], 0);
+}
+
+function drawGmt2() {
+  // Lower slot — 9 o'clock, indented
+  const tz = TZ_PRESETS[state.gmt2Idx];
+  const slotH = FS.gmtTime + FS.gmtDay + FS.gmtOff + 4;
+  drawGmtSlot(W * 0.09, cy - slotH / 2 + FS.gmtTime / 2, tz[1], tz[0], W * 0.05);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: HEART RATE
+// ════════════════════════════════════════════════════════════════════════════
+function drawHR() {
+  const rBase = Math.max(7, W * 0.038);
+  const sec = Math.floor(Date.now() / 1000) % 2;
+  const r = sec === 0 ? rBase * 1.2 : rBase;
+
+  const offsetX = W * 0.25;
+  const icx = cx - offsetX;
+  const icy = H * 0.69;
+
+  drawHeart(icx, icy, r);
+
+  ctx.font = `900 ${FS.hr}px "Arial Black", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = C.hr;
+  ctx.fillText('80', icx, icy + rBase + 4);
+}
+
+function drawHeart(hcx, hcy, r) {
+  ctx.fillStyle = C.hr;
+  const lobeR = r / 2;
+  const lobeY = hcy - r / 4;
+  ctx.beginPath();
+  ctx.arc(hcx - lobeR, lobeY, lobeR, 0, Math.PI * 2);
+  ctx.arc(hcx + lobeR, lobeY, lobeR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(hcx - r, lobeY);
+  ctx.lineTo(hcx + r, lobeY);
+  ctx.lineTo(hcx, hcy + r);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: SUNRISE/SUNSET
+// ════════════════════════════════════════════════════════════════════════════
+function drawSunset() {
+  const loc = LOCATIONS[state.loc];
+  const offsetX = W * 0.25;
+  const iconCx = cx + offsetX;
+  const iconR = Math.max(7, W * 0.038);
+  const horizonY = H * 0.74;
+  const iconCy = horizonY;
+
+  // Half-circle (top dome)
+  ctx.fillStyle = C.sunset;
+  ctx.beginPath();
+  ctx.arc(iconCx, iconCy, iconR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.fillRect(iconCx - iconR - 1, iconCy + 1, iconR * 2 + 2, iconR + 2);
+
+  // Horizon line
+  ctx.strokeStyle = C.sunset;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(iconCx - iconR * 1.5, iconCy + 1);
+  ctx.lineTo(iconCx + iconR * 1.5, iconCy + 1);
+  ctx.stroke();
+
+  // Rays
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 5; i++) {
+    const deg = -150 + i * 30;
+    const a = deg * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(iconCx + Math.cos(a) * iconR * 1.3, iconCy + Math.sin(a) * iconR * 1.3);
+    ctx.lineTo(iconCx + Math.cos(a) * iconR * 1.8, iconCy + Math.sin(a) * iconR * 1.8);
+    ctx.stroke();
+  }
+
+  // Time text — show NEXT relevant solar event
+  const grace = 20;
+  let displayMin;
+  if (state.nowMin >= loc.sunriseMin + grace && state.nowMin < loc.sunsetMin + grace) {
+    displayMin = loc.sunsetMin;
+  } else {
+    displayMin = loc.sunriseMin;
+  }
+  ctx.font = `900 ${FS.sunset}px "Arial Black", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = C.sunset;
+  ctx.fillText(fmt12Short(displayMin), iconCx, horizonY + 4);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DRAW: MOON (with latitude tilt)
+// ════════════════════════════════════════════════════════════════════════════
+function drawMoon() {
+  const phase = moonPhase();
+  const ecl = state.bloodMoon;
+  const color = ecl ? C.moonEcl : C.moon;
+  const r = W * 0.055;
+  const mcx = W * 0.78;
+  const mcy = H * 0.22;
+  drawMoonIcon(mcx, mcy, r, phase, color);
+}
+
+function drawMoonIcon(mcx, mcy, r, phase, color) {
+  if (phase < 0.03 || phase > 0.97) {
+    // New moon — outline only
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(mcx, mcy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    return;
+  }
+
+  // Lit moon body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(mcx, mcy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Full moon
+  if (phase > 0.47 && phase < 0.53) return;
+
+  // Shadow magnitude
+  let mag;
+  if (phase < 0.5) mag = (0.5 - phase) * 2 * r * 1.5;
+  else             mag = (phase - 0.5) * 2 * r * 1.5;
+
+  // Base shadow vector — flipped horizontally to fix orientation
+  let bx;
+  if (phase < 0.5) bx = mag;
+  else             bx = -mag;
+  const by = 0;
+
+  // Latitude rotation — direct mapping (matches GMTView.mc)
+  const lat = LOCATIONS[state.loc].lat;
+  const rotRad = lat * Math.PI / 180;
+  const cosR = Math.cos(rotRad);
+  const sinR = Math.sin(rotRad);
+  const sxF = bx * cosR - by * sinR;
+  const syF = bx * sinR + by * cosR;  // No leading negative — corrected
+
+  // Final 90° clockwise rotation
+  const sxFinal = -syF;
+  const syFinal = sxF;
+
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(mcx + sxFinal, mcy + syFinal, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  MAIN RENDER
+// ════════════════════════════════════════════════════════════════════════════
+function render() {
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Order matches GMTView.onUpdate()
+  drawDaylightArc();
+  drawTickMarks();
+  drawStepsBar();
+  drawCenterTime();
+  drawDate();
+  drawWeather();
+  drawBattery();
+  drawGmt1();
+  drawGmt2();
+  drawHR();
+  drawSunset();
+  drawMoon();
+
+  updateStatus();
+}
+
+function updateStatus() {
+  const loc = LOCATIONS[state.loc];
+  const hemi = loc.lat >= 0 ? 'N' : 'S';
+  const phase = moonPhase();
+  const phaseName = phase < 0.03 || phase > 0.97 ? 'New'
+    : phase < 0.22 ? 'Wax Cres'
+    : phase < 0.28 ? 'First Q'
+    : phase < 0.47 ? 'Wax Gib'
+    : phase < 0.53 ? 'Full'
+    : phase < 0.72 ? 'Wan Gib'
+    : phase < 0.78 ? 'Third Q'
+    : 'Wan Cres';
+
+  document.getElementById('status').innerHTML =
+    `<span class="hi">${loc.name}</span> · ${loc.date} · lat <span class="hi">${Math.abs(loc.lat).toFixed(2)}°${hemi}</span><br>` +
+    `sunrise <span class="hi">${fmt12(loc.sunriseMin)}</span> · sunset <span class="hi">${fmt12(loc.sunsetMin)}</span><br>` +
+    `moon phase <span class="hi">${phaseName}</span> ${state.bloodMoon ? '· <span style="color:#ff5555">ECLIPSE</span>' : ''}`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  CONTROLS
+// ════════════════════════════════════════════════════════════════════════════
+document.querySelectorAll('#locations button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#locations button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.loc = btn.dataset.loc;
+    render();
+  });
+});
+
+const slider = document.getElementById('time-slider');
+const readout = document.getElementById('time-readout');
+slider.addEventListener('input', () => {
+  state.nowMin = parseInt(slider.value);
+  readout.textContent = fmt12(state.nowMin);
+  render();
+});
+
+document.getElementById('green-flash').addEventListener('click', () => {
+  // Snap time to sunset, then trigger flash
+  const loc = LOCATIONS[state.loc];
+  state.nowMin = loc.sunsetMin;
+  slider.value = state.nowMin;
+  readout.textContent = fmt12(state.nowMin);
+  state.greenFlash = true;
+  state.greenFlashStart = Date.now();
+  render();
+  setTimeout(() => { state.greenFlash = false; render(); }, 1200);
+});
+
+document.getElementById('blood-moon').addEventListener('click', (e) => {
+  state.bloodMoon = !state.bloodMoon;
+  e.target.classList.toggle('active', state.bloodMoon);
+  render();
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  GMT DROPDOWN POPULATION
+// ════════════════════════════════════════════════════════════════════════════
+function buildTzOptions() {
+  return TZ_PRESETS.map((tz, i) => {
+    const sign = tz[1] >= 0 ? '+' : '-';
+    const abs = Math.abs(tz[1]);
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    const offStr = m === 0 ? `${sign}${h}` : `${sign}${h}:${m.toString().padStart(2,'0')}`;
+    return `<option value="${i}">${tz[0]} ${offStr} · ${tz[2]}</option>`;
+  }).join('');
+}
+
+const gmt1Sel = document.getElementById('gmt1-select');
+const gmt2Sel = document.getElementById('gmt2-select');
+gmt1Sel.innerHTML = buildTzOptions();
+gmt2Sel.innerHTML = buildTzOptions();
+gmt1Sel.value = state.gmt1Idx;
+gmt2Sel.value = state.gmt2Idx;
+gmt1Sel.addEventListener('change', () => {
+  state.gmt1Idx = parseInt(gmt1Sel.value);
+  render();
+});
+gmt2Sel.addEventListener('change', () => {
+  state.gmt2Idx = parseInt(gmt2Sel.value);
+  render();
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════════════════
+document.querySelector('[data-loc="hawaii"]').classList.add('active');
+readout.textContent = fmt12(state.nowMin);
+render();
+
+// 1Hz refresh for heart pulse animation
+setInterval(render, 1000);
+</script>
+</body>
+</html>
