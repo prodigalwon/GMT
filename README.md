@@ -2,6 +2,11 @@
 
 A traveler's instrument. Not a fitness tracker. Every element earns its place.
 
+
+<img width="531" height="740" alt="image" src="https://github.com/user-attachments/assets/f2cb8112-9fd0-4da6-8dd9-0a737c41da85" />
+
+
+
 ## Center Time
 
 Large stacked hours (white) and minutes (blue) dominate the face. Readable at a glance under any condition. Follows your device's 12/24-hour preference.
